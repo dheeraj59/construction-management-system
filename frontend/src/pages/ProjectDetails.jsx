@@ -3,6 +3,19 @@ import { useState } from "react";
 function ProjectDetails({ project, employees, onBack, onProjectUpdate }) {
   const [showWorkers, setShowWorkers] = useState(false);
   const [showAttendance, setShowAttendance] = useState(false);
+  const [showDailyWork, setShowDailyWork] = useState(false);
+  const [editingDailyWorkId, setEditingDailyWorkId] = useState(null);
+
+const [dailyWorkRecords, setDailyWorkRecords] = useState([]);
+
+const [dailyWorkForm, setDailyWorkForm] = useState({
+  date: new Date().toISOString().split("T")[0],
+  description: "",
+  status: "",
+  progress: project.progress || 0,
+  workersPresent: "",
+  notes: "",
+});
 
 const [attendanceDate, setAttendanceDate] = useState(
   new Date().toISOString().split("T")[0]
@@ -254,6 +267,127 @@ const notMarkedCount =
 
     setShowExpenseForm(true);
   };
+  const handleDailyWorkChange = (event) => {
+  const { name, value } = event.target;
+
+  setDailyWorkForm((previousData) => ({
+    ...previousData,
+    [name]: value,
+  }));
+};
+
+const handleSaveDailyWork = (event) => {
+  event.preventDefault();
+
+  if (!dailyWorkForm.description.trim()) {
+    alert("Please enter the work description.");
+    return;
+  }
+
+  if (!dailyWorkForm.status) {
+    alert("Please select the work status.");
+    return;
+  }
+
+  if (Number(dailyWorkForm.progress) < 0 || Number(dailyWorkForm.progress) > 100) {
+    alert("Progress must be between 0 and 100.");
+    return;
+  }
+
+  if (
+    Number(dailyWorkForm.workersPresent) < 0 ||
+    Number(dailyWorkForm.workersPresent) > projectEmployees.length
+  ) {
+    alert(
+      `Workers present cannot be more than ${projectEmployees.length}.`
+    );
+    return;
+  }
+
+  if (dailyWorkForm.date > new Date().toISOString().split("T")[0]) {
+    alert("Daily work date cannot be in the future.");
+    return;
+  }
+
+  if (editingDailyWorkId !== null) {
+    setDailyWorkRecords((previousRecords) =>
+      previousRecords.map((record) =>
+        record.id === editingDailyWorkId
+          ? {
+              ...record,
+              ...dailyWorkForm,
+              progress: Number(dailyWorkForm.progress),
+              workersPresent: Number(dailyWorkForm.workersPresent),
+            }
+          : record
+      )
+    );
+  } else {
+    const newRecord = {
+      id: Date.now(),
+      ...dailyWorkForm,
+      progress: Number(dailyWorkForm.progress),
+      workersPresent: Number(dailyWorkForm.workersPresent),
+    };
+
+    setDailyWorkRecords((previousRecords) => [
+      newRecord,
+      ...previousRecords,
+    ]);
+  }
+
+  // Update project's current progress
+  const newProgress = Number(dailyWorkForm.progress);
+
+  setProgress(newProgress);
+
+  onProjectUpdate({
+    ...project,
+    status,
+    progress: newProgress,
+  });
+
+  setDailyWorkForm({
+    date: new Date().toISOString().split("T")[0],
+    description: "",
+    status: "",
+    progress: newProgress,
+    workersPresent: "",
+    notes: "",
+  });
+
+  setEditingDailyWorkId(null);
+  setShowDailyWork(false);
+};
+
+const handleEditDailyWork = (record) => {
+  setEditingDailyWorkId(record.id);
+
+  setDailyWorkForm({
+    date: record.date,
+    description: record.description,
+    status: record.status,
+    progress: record.progress,
+    workersPresent: record.workersPresent,
+    notes: record.notes || "",
+  });
+
+  setShowDailyWork(true);
+};
+
+const handleDeleteDailyWork = (recordId) => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete this daily work report?"
+  );
+
+  if (!confirmDelete) {
+    return;
+  }
+
+  setDailyWorkRecords((previousRecords) =>
+    previousRecords.filter((record) => record.id !== recordId)
+  );
+};
 
   return (
     <div>
@@ -483,7 +617,7 @@ const notMarkedCount =
         />
 
         <p className="progress-text">
-          {project.progress}% completed
+         {progress}% completed
         </p>
       </div>
 
@@ -525,10 +659,26 @@ const notMarkedCount =
             <span>Track client payments</span>
           </div>
 
-          <div className="module-card">
-            <strong>Daily Work</strong>
-            <span>View daily site reports</span>
-          </div>
+       <div
+  className="module-card"
+  onClick={() => {
+    setEditingDailyWorkId(null);
+
+    setDailyWorkForm({
+      date: new Date().toISOString().split("T")[0],
+      description: "",
+      status: "",
+      progress: project.progress || 0,
+      workersPresent: "",
+      notes: "",
+    });
+
+    setShowDailyWork(true);
+  }}
+>
+  <strong>Daily Work</strong>
+  <span>View daily site reports</span>
+</div>
         </div>
       </div>
 
@@ -790,6 +940,230 @@ const notMarkedCount =
           </div>
         </div>
       )}
+
+      {showDailyWork && (
+  <div className="dashboard-section daily-work-section">
+    <div className="section-header">
+      <div>
+        <h3>
+          {editingDailyWorkId !== null
+            ? "Edit Daily Work Report"
+            : "Daily Work / Site Update"}
+        </h3>
+
+        <p className="dashboard-subtitle">
+          Record daily work progress for {project.name}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        className="modal-close"
+        onClick={() => {
+          setShowDailyWork(false);
+          setEditingDailyWorkId(null);
+        }}
+      >
+        ×
+      </button>
+    </div>
+
+    <form onSubmit={handleSaveDailyWork}>
+      <div className="daily-work-form-grid">
+
+        <div className="form-group">
+          <label>Work Date</label>
+
+          <input
+            type="date"
+            name="date"
+            value={dailyWorkForm.date}
+            min={project.startDate}
+            max={new Date().toISOString().split("T")[0]}
+            onChange={handleDailyWorkChange}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Work Status</label>
+
+          <select
+            name="status"
+            value={dailyWorkForm.status}
+            onChange={handleDailyWorkChange}
+            required
+          >
+            <option value="">Select status</option>
+            <option value="Started">Started</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+            <option value="Delayed">Delayed</option>
+            <option value="On Hold">On Hold</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Project Progress (%)</label>
+
+          <input
+            type="number"
+            name="progress"
+            min="0"
+            max="100"
+            value={dailyWorkForm.progress}
+            onChange={handleDailyWorkChange}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Workers Present</label>
+
+          <input
+            type="number"
+            name="workersPresent"
+            min="0"
+            max={projectEmployees.length}
+            placeholder={`Maximum ${projectEmployees.length}`}
+            value={dailyWorkForm.workersPresent}
+            onChange={handleDailyWorkChange}
+            required
+          />
+
+          <small>
+            Assigned workers: {projectEmployees.length}
+          </small>
+        </div>
+
+      </div>
+
+      <div className="form-group">
+        <label>Work Description</label>
+
+        <textarea
+          name="description"
+          rows="4"
+          placeholder="Describe the work completed today..."
+          value={dailyWorkForm.description}
+          onChange={handleDailyWorkChange}
+          required
+        />
+      </div>
+
+      <div className="form-group">
+        <label>Notes</label>
+
+        <textarea
+          name="notes"
+          rows="3"
+          placeholder="Any issues, delays, observations or additional notes..."
+          value={dailyWorkForm.notes}
+          onChange={handleDailyWorkChange}
+        />
+      </div>
+
+      <button
+        type="submit"
+        className="primary-button"
+      >
+        {editingDailyWorkId !== null
+          ? "Save Changes"
+          : "Save Daily Report"}
+      </button>
+    </form>
+
+    <div className="daily-work-records">
+      <div className="section-header">
+        <div>
+          <h3>Previous Site Reports</h3>
+          <p className="dashboard-subtitle">
+            Daily work history for this project
+          </p>
+        </div>
+      </div>
+
+      {dailyWorkRecords.length === 0 ? (
+        <div className="empty-state">
+          <h3>No daily work reports yet</h3>
+          <p>
+            Add the first daily site report for this project.
+          </p>
+        </div>
+      ) : (
+        <div className="daily-work-list">
+          {dailyWorkRecords.map((record) => (
+            <div
+              className="daily-work-card"
+              key={record.id}
+            >
+              <div className="daily-work-card-header">
+                <div>
+                  <h3>{record.date}</h3>
+
+                  <span
+                    className={`daily-work-status ${record.status
+                      .toLowerCase()
+                      .replace(" ", "-")}`}
+                  >
+                    {record.status}
+                  </span>
+                </div>
+
+                <div className="daily-work-actions">
+                  <button
+  type="button"
+  className="edit-button"
+  onClick={(event) => {
+    event.stopPropagation();
+    handleEditDailyWork(record);
+  }}
+>
+  Edit
+</button>
+                  <button
+  type="button"
+  className="expense-delete-button"
+  onClick={(event) => {
+    event.stopPropagation();
+    handleDeleteDailyWork(record.id);
+  }}
+>
+  Delete
+</button>
+                </div>
+              </div>
+
+              <div className="daily-work-details">
+                <div>
+                  <span>Progress</span>
+                  <strong>{record.progress}%</strong>
+                </div>
+
+                <div>
+                  <span>Workers Present</span>
+                  <strong>{record.workersPresent}</strong>
+                </div>
+              </div>
+
+              <div className="daily-work-description">
+                <strong>Work Completed</strong>
+                <p>{record.description}</p>
+              </div>
+
+              {record.notes && (
+                <div className="daily-work-notes">
+                  <strong>Notes</strong>
+                  <p>{record.notes}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+)}
 
       {showWorkers && (
         <div className="dashboard-section">
