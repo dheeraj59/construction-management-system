@@ -4,6 +4,7 @@ function ProjectDetails({ project, employees, onBack, onProjectUpdate }) {
   const [showWorkers, setShowWorkers] = useState(false);
   const [showAttendance, setShowAttendance] = useState(false);
   const [showDailyWork, setShowDailyWork] = useState(false);
+ 
   const [editingDailyWorkId, setEditingDailyWorkId] = useState(null);
 
 const [dailyWorkRecords, setDailyWorkRecords] = useState([]);
@@ -16,7 +17,138 @@ const [dailyWorkForm, setDailyWorkForm] = useState({
   workersPresent: "",
   notes: "",
 });
+ const [showMaterials, setShowMaterials] = useState(false);
+  const [materials, setMaterials] = useState([]);
+  const [showMaterialForm, setShowMaterialForm] = useState(false);
+const [editingMaterialId, setEditingMaterialId] = useState(null);
+const [materialForm, setMaterialForm] = useState({
+  name: "",
+  category: "",
+  quantity: "",
+  unit: "",
+  unitPrice: "",
+  supplier: "",
+  purchaseDate: new Date().toISOString().split("T")[0],
+  notes: "",
+});
+const handleMaterialChange = (event) => {
+  const { name, value } = event.target;
 
+  setMaterialForm((previousForm) => ({
+    ...previousForm,
+    [name]: value,
+  }));
+};
+
+const resetMaterialForm = () => {
+  setMaterialForm({
+    name: "",
+    category: "",
+    quantity: "",
+    unit: "",
+    unitPrice: "",
+    supplier: "",
+    purchaseDate: new Date().toISOString().split("T")[0],
+    notes: "",
+  });
+
+  setEditingMaterialId(null);
+};
+
+const handleSaveMaterial = () => {
+  if (!materialForm.name.trim()) {
+    alert("Please enter material name.");
+    return;
+  }
+
+  if (!materialForm.category) {
+    alert("Please select a material category.");
+    return;
+  }
+
+  if (!materialForm.quantity || Number(materialForm.quantity) <= 0) {
+    alert("Quantity must be greater than 0.");
+    return;
+  }
+
+  if (!materialForm.unit) {
+    alert("Please select a unit.");
+    return;
+  }
+
+  if (!materialForm.unitPrice || Number(materialForm.unitPrice) < 0) {
+    alert("Please enter a valid unit price.");
+    return;
+  }
+
+  if (!materialForm.supplier.trim()) {
+    alert("Please enter supplier name.");
+    return;
+  }
+
+  const materialData = {
+    name: materialForm.name.trim(),
+    category: materialForm.category,
+    quantity: Number(materialForm.quantity),
+    unit: materialForm.unit,
+    unitPrice: Number(materialForm.unitPrice),
+    supplier: materialForm.supplier.trim(),
+    purchaseDate: materialForm.purchaseDate,
+    notes: materialForm.notes.trim(),
+  };
+
+  if (editingMaterialId !== null) {
+    setMaterials((previousMaterials) =>
+      previousMaterials.map((material) =>
+        material.id === editingMaterialId
+          ? { ...material, ...materialData }
+          : material
+      )
+    );
+  } else {
+    setMaterials((previousMaterials) => [
+      ...previousMaterials,
+      {
+        id: Date.now(),
+        ...materialData,
+      },
+    ]);
+  }
+
+  resetMaterialForm();
+  setShowMaterialForm(false);
+};
+
+const handleEditMaterial = (material) => {
+  setEditingMaterialId(material.id);
+
+  setMaterialForm({
+    name: material.name,
+    category: material.category,
+    quantity: material.quantity,
+    unit: material.unit,
+    unitPrice: material.unitPrice,
+    supplier: material.supplier,
+    purchaseDate: material.purchaseDate,
+    notes: material.notes || "",
+  });
+
+  setShowMaterialForm(true);
+};
+
+const handleDeleteMaterial = (materialId) => {
+  const confirmed = window.confirm(
+    "Are you sure you want to delete this material?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  setMaterials((previousMaterials) =>
+    previousMaterials.filter((material) => material.id !== materialId)
+  );
+};
 const [attendanceDate, setAttendanceDate] = useState(
   new Date().toISOString().split("T")[0]
 );
@@ -641,10 +773,16 @@ const handleDeleteDailyWork = (recordId) => {
   <span>View project attendance</span>
 </div>
 
-          <div className="module-card">
-            <strong>Materials</strong>
-            <span>Track project materials</span>
-          </div>
+     <div
+  className="module-card"
+  onClick={() => {
+    resetMaterialForm();
+    setShowMaterials(true);
+  }}
+>
+  <strong>Materials</strong>
+  <span>Track project materials</span>
+</div>
 
           <div
             className="module-card"
@@ -1233,6 +1371,364 @@ const handleDeleteDailyWork = (recordId) => {
           )}
         </div>
       )}
+
+      {showMaterials && (
+  <div className="module-overlay">
+    <div className="module-panel">
+
+      <div className="module-panel-header">
+        <div>
+          <h2>Project Materials</h2>
+          <p>{project.name}</p>
+        </div>
+
+        <button
+          type="button"
+          className="close-button"
+          onClick={() => {
+            setShowMaterials(false);
+            setShowMaterialForm(false);
+            resetMaterialForm();
+          }}
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Material Summary */}
+
+      <div className="material-summary-grid">
+
+        <div className="summary-card">
+          <span>Total Materials</span>
+          <strong>{materials.length}</strong>
+        </div>
+
+        <div className="summary-card">
+          <span>Total Quantity</span>
+          <strong>
+            {materials.reduce(
+              (total, material) => total + Number(material.quantity),
+              0
+            )}
+          </strong>
+        </div>
+
+        <div className="summary-card">
+          <span>Total Material Cost</span>
+          <strong>
+            ₹
+            {materials
+              .reduce(
+                (total, material) =>
+                  total +
+                  Number(material.quantity) *
+                    Number(material.unitPrice),
+                0
+              )
+              .toLocaleString("en-IN")}
+          </strong>
+        </div>
+
+      </div>
+
+      {/* Add Material Button */}
+
+      {!showMaterialForm && (
+        <button
+          type="button"
+          className="add-button"
+          onClick={() => {
+            resetMaterialForm();
+            setShowMaterialForm(true);
+          }}
+        >
+          + Add Material
+        </button>
+      )}
+
+      {/* Material Form */}
+
+      {showMaterialForm && (
+        <div className="material-form">
+
+          <div className="section-header">
+            <h3>
+              {editingMaterialId !== null
+                ? "Edit Material"
+                : "Add Material"}
+            </h3>
+          </div>
+
+          <div className="material-form-grid">
+
+            <div className="form-group">
+              <label>Material Name</label>
+
+              <input
+                type="text"
+                name="name"
+                value={materialForm.name}
+                onChange={handleMaterialChange}
+                placeholder="e.g. Cement"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Category</label>
+
+              <select
+                name="category"
+                value={materialForm.category}
+                onChange={handleMaterialChange}
+              >
+                <option value="">Select Category</option>
+                <option value="Cement">Cement</option>
+                <option value="Steel">Steel</option>
+                <option value="Bricks">Bricks</option>
+                <option value="Sand">Sand</option>
+                <option value="Electrical">Electrical</option>
+                <option value="Plumbing">Plumbing</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Quantity</label>
+
+              <input
+                type="number"
+                name="quantity"
+                min="0"
+                step="0.01"
+                value={materialForm.quantity}
+                onChange={handleMaterialChange}
+                placeholder="e.g. 50"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Unit</label>
+
+              <select
+                name="unit"
+                value={materialForm.unit}
+                onChange={handleMaterialChange}
+              >
+                <option value="">Select Unit</option>
+                <option value="Bags">Bags</option>
+                <option value="Kg">Kg</option>
+                <option value="Ton">Ton</option>
+                <option value="Pieces">Pieces</option>
+                <option value="Cubic Feet">Cubic Feet</option>
+                <option value="Litres">Litres</option>
+                <option value="Meters">Meters</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Unit Price (₹)</label>
+
+              <input
+                type="number"
+                name="unitPrice"
+                min="0"
+                step="0.01"
+                value={materialForm.unitPrice}
+                onChange={handleMaterialChange}
+                placeholder="e.g. 420"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Supplier</label>
+
+              <input
+                type="text"
+                name="supplier"
+                value={materialForm.supplier}
+                onChange={handleMaterialChange}
+                placeholder="Supplier name"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Purchase Date</label>
+
+              <input
+                type="date"
+                name="purchaseDate"
+                value={materialForm.purchaseDate}
+                max={new Date().toISOString().split("T")[0]}
+                onChange={handleMaterialChange}
+              />
+            </div>
+
+          </div>
+
+          <div className="form-group">
+            <label>Notes</label>
+
+            <textarea
+              name="notes"
+              value={materialForm.notes}
+              onChange={handleMaterialChange}
+              rows="3"
+              placeholder="Additional information about this material..."
+            />
+          </div>
+
+          <div className="form-actions">
+
+            <button
+              type="button"
+              className="cancel-button"
+              onClick={() => {
+                resetMaterialForm();
+                setShowMaterialForm(false);
+              }}
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              className="save-button"
+              onClick={handleSaveMaterial}
+            >
+              {editingMaterialId !== null
+                ? "Update Material"
+                : "Save Material"}
+            </button>
+
+          </div>
+
+        </div>
+      )}
+
+      {/* Material Records */}
+
+      <div className="material-records">
+
+        <div className="section-header">
+          <h3>Material Records</h3>
+        </div>
+
+        {materials.length === 0 ? (
+
+          <div className="empty-state">
+            <p>No materials added for this project yet.</p>
+          </div>
+
+        ) : (
+
+          <div className="material-list">
+
+            {materials.map((material) => {
+
+              const totalCost =
+                Number(material.quantity) *
+                Number(material.unitPrice);
+
+              return (
+                <div
+                  className="material-card"
+                  key={material.id}
+                >
+
+                  <div className="material-card-header">
+
+                    <div>
+                      <h3>{material.name}</h3>
+
+                      <span className="material-category">
+                        {material.category}
+                      </span>
+                    </div>
+
+                    <div className="material-actions">
+
+                      <button
+                        type="button"
+                        className="edit-button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleEditMaterial(material);
+                        }}
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        type="button"
+                        className="delete-button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleDeleteMaterial(material.id);
+                        }}
+                      >
+                        Delete
+                      </button>
+
+                    </div>
+
+                  </div>
+
+                  <div className="material-details">
+
+                    <div>
+                      <span>Quantity</span>
+                      <strong>
+                        {material.quantity} {material.unit}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Unit Price</span>
+                      <strong>
+                        ₹{Number(material.unitPrice).toLocaleString("en-IN")}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Total Cost</span>
+                      <strong>
+                        ₹{totalCost.toLocaleString("en-IN")}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Purchase Date</span>
+                      <strong>{material.purchaseDate}</strong>
+                    </div>
+
+                  </div>
+
+                  <div className="material-supplier">
+                    <span>Supplier</span>
+                    <strong>{material.supplier}</strong>
+                  </div>
+
+                  {material.notes && (
+                    <div className="material-notes">
+                      <strong>Notes</strong>
+                      <p>{material.notes}</p>
+                    </div>
+                  )}
+
+                </div>
+              );
+            })}
+
+          </div>
+
+        )}
+
+      </div>
+
+    </div>
+  </div>
+)}
 
       {showAttendance && (
   <div className="dashboard-section">
