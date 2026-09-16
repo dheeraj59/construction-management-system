@@ -1513,3 +1513,190 @@ body {
   }
 }
 
+/* ============================= */
+/* Worker Payments Module */
+/* ============================= */
+
+.payment-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.payment-form {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f9fafb;
+}
+
+.payment-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.payment-form-grid .form-group {
+  margin-bottom: 0;
+}
+
+.payment-form textarea {
+  width: 100%;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.worker-payment-summary {
+  margin-top: 30px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 25px;
+}
+
+.worker-payment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.worker-payment-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 18px;
+  background: #ffffff;
+}
+
+.worker-payment-card h3 {
+  margin: 0 0 5px;
+}
+
+.worker-payment-card > div:first-child span {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.worker-payment-values {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-top: 18px;
+}
+
+.worker-payment-values div {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.worker-payment-values span {
+  display: block;
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+
+.worker-payment-values strong {
+  font-size: 17px;
+}
+
+.payment-records {
+  margin-top: 30px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 25px;
+}
+
+.payment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.payment-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 18px;
+  background: #ffffff;
+}
+
+.payment-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.payment-card-header h3 {
+  margin: 0 0 5px;
+}
+
+.payment-card-header span {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.payment-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.payment-amount {
+  margin-top: 18px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.payment-note {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.payment-note strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.payment-note p {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .payment-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .payment-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .worker-payment-values {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .payment-card-header {
+    flex-direction: column;
+  }
+
+  .payment-actions {
+    width: 100%;
+  }
+
+  .payment-actions button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .worker-payment-values {
+    grid-template-columns: 1fr;
+  }
+}
+

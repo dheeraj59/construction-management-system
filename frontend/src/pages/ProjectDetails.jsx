@@ -4,6 +4,17 @@ function ProjectDetails({ project, employees, onBack, onProjectUpdate }) {
   const [showWorkers, setShowWorkers] = useState(false);
   const [showAttendance, setShowAttendance] = useState(false);
   const [showDailyWork, setShowDailyWork] = useState(false);
+  const [showPayments, setShowPayments] = useState(false);
+  const [workerPayments, setWorkerPayments] = useState([]);
+const [showPaymentForm, setShowPaymentForm] = useState(false);
+const [editingPaymentId, setEditingPaymentId] = useState(null);
+
+const [paymentForm, setPaymentForm] = useState({
+  employeeId: "",
+  date: new Date().toISOString().split("T")[0],
+  amount: "",
+  note: "",
+});
  
   const [editingDailyWorkId, setEditingDailyWorkId] = useState(null);
 
@@ -56,67 +67,71 @@ const resetMaterialForm = () => {
 };
 
 const handleSaveMaterial = () => {
-  if (!materialForm.name.trim()) {
-    alert("Please enter material name.");
-    return;
-  }
-
-  if (!materialForm.category) {
-    alert("Please select a material category.");
-    return;
-  }
-
-  if (!materialForm.quantity || Number(materialForm.quantity) <= 0) {
-    alert("Quantity must be greater than 0.");
-    return;
-  }
-
-  if (!materialForm.unit) {
-    alert("Please select a unit.");
-    return;
-  }
-
-  if (!materialForm.unitPrice || Number(materialForm.unitPrice) < 0) {
-    alert("Please enter a valid unit price.");
-    return;
-  }
-
-  if (!materialForm.supplier.trim()) {
-    alert("Please enter supplier name.");
-    return;
-  }
+  if (!materialForm.name.trim()) { alert("Please enter material name."); return; }
+  if (!materialForm.category) { alert("Please select a material category."); return; }
+  if (!materialForm.quantity || Number(materialForm.quantity) <= 0) { alert("Quantity must be greater than 0."); return; }
+  if (!materialForm.unit) { alert("Please select a unit."); return; }
+  if (!materialForm.unitPrice || Number(materialForm.unitPrice) < 0) { alert("Please enter a valid unit price."); return; }
+  if (!materialForm.supplier.trim()) { alert("Please enter supplier name."); return; }
 
   const materialData = {
-    name: materialForm.name.trim(),
-    category: materialForm.category,
-    quantity: Number(materialForm.quantity),
-    unit: materialForm.unit,
-    unitPrice: Number(materialForm.unitPrice),
-    supplier: materialForm.supplier.trim(),
-    purchaseDate: materialForm.purchaseDate,
-    notes: materialForm.notes.trim(),
+    name: materialForm.name.trim(), category: materialForm.category,
+    quantity: Number(materialForm.quantity), unit: materialForm.unit,
+    unitPrice: Number(materialForm.unitPrice), supplier: materialForm.supplier.trim(),
+    purchaseDate: materialForm.purchaseDate, notes: materialForm.notes.trim(),
   };
 
   if (editingMaterialId !== null) {
-    setMaterials((previousMaterials) =>
-      previousMaterials.map((material) =>
-        material.id === editingMaterialId
-          ? { ...material, ...materialData }
-          : material
-      )
-    );
+    setMaterials((previousMaterials) => previousMaterials.map((material) =>
+      material.id === editingMaterialId ? { ...material, ...materialData } : material
+    ));
   } else {
-    setMaterials((previousMaterials) => [
-      ...previousMaterials,
-      {
-        id: Date.now(),
-        ...materialData,
-      },
-    ]);
+    setMaterials((previousMaterials) => [...previousMaterials, { id: Date.now(), ...materialData }]);
   }
 
   resetMaterialForm();
   setShowMaterialForm(false);
+};
+
+const handlePaymentChange = (event) => {
+  const { name, value } = event.target;
+  setPaymentForm((previousForm) => ({ ...previousForm, [name]: value }));
+};
+
+const resetPaymentForm = () => {
+  setPaymentForm({ employeeId: "", date: new Date().toISOString().split("T")[0], amount: "", note: "" });
+  setEditingPaymentId(null);
+};
+
+const handleSavePayment = () => {
+  if (!paymentForm.employeeId) { alert("Please select a worker."); return; }
+  if (!paymentForm.amount || Number(paymentForm.amount) <= 0) { alert("Payment amount must be greater than 0."); return; }
+  if (!paymentForm.date) { alert("Please select a payment date."); return; }
+  const today = new Date().toISOString().split("T")[0];
+  if (paymentForm.date > today) { alert("Payment date cannot be in the future."); return; }
+
+  const paymentData = { employeeId: Number(paymentForm.employeeId), date: paymentForm.date, amount: Number(paymentForm.amount), note: paymentForm.note.trim() };
+
+  if (editingPaymentId !== null) {
+    setWorkerPayments((previousPayments) => previousPayments.map((payment) =>
+      payment.id === editingPaymentId ? { ...payment, ...paymentData } : payment
+    ));
+  } else {
+    setWorkerPayments((previousPayments) => [...previousPayments, { id: Date.now(), ...paymentData }]);
+  }
+  resetPaymentForm();
+  setShowPaymentForm(false);
+};
+
+const handleEditPayment = (payment) => {
+  setEditingPaymentId(payment.id);
+  setPaymentForm({ employeeId: payment.employeeId, date: payment.date, amount: payment.amount, note: payment.note || "" });
+  setShowPaymentForm(true);
+};
+
+const handleDeletePayment = (paymentId) => {
+  if (!window.confirm("Are you sure you want to delete this payment?")) return;
+  setWorkerPayments((previousPayments) => previousPayments.filter((payment) => payment.id !== paymentId));
 };
 
 const handleEditMaterial = (material) => {
@@ -792,10 +807,13 @@ const handleDeleteDailyWork = (recordId) => {
             <span>Track project expenses</span>
           </div>
 
-          <div className="module-card">
-            <strong>Payments</strong>
-            <span>Track client payments</span>
-          </div>
+          <div
+  className="module-card"
+  onClick={() => setShowPayments(true)}
+>
+  <strong>Payments</strong>
+  <span>Track project payments</span>
+</div>
 
        <div
   className="module-card"
@@ -1371,6 +1389,407 @@ const handleDeleteDailyWork = (recordId) => {
           )}
         </div>
       )}
+
+      {showPayments && (
+  <div className="module-overlay">
+    <div className="module-panel">
+
+      <div className="module-panel-header">
+        <div>
+          <h2>Worker Payments</h2>
+          <p>{project.name}</p>
+        </div>
+
+        <button
+          type="button"
+          className="close-button"
+          onClick={() => {
+            setShowPayments(false);
+            setShowPaymentForm(false);
+            resetPaymentForm();
+          }}
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Payment Summary */}
+
+      <div className="payment-summary-grid">
+
+        <div className="summary-card">
+          <span>Total Workers</span>
+          <strong>{projectEmployees.length}</strong>
+        </div>
+
+        <div className="summary-card">
+          <span>Total Earned</span>
+          <strong>
+            ₹
+            {projectEmployees
+              .reduce(
+                (total, employee) =>
+                  total +
+                  employee.dailyWage *
+                    attendanceRecords.filter(
+                      (record) =>
+                        record.employeeId === employee.id &&
+                        record.status === "Present"
+                    ).length,
+                0
+              )
+              .toLocaleString("en-IN")}
+          </strong>
+        </div>
+
+        <div className="summary-card">
+          <span>Total Paid</span>
+          <strong>
+            ₹
+            {workerPayments
+              .reduce(
+                (total, payment) =>
+                  total + Number(payment.amount),
+                0
+              )
+              .toLocaleString("en-IN")}
+          </strong>
+        </div>
+
+        <div className="summary-card">
+          <span>Remaining Balance</span>
+          <strong>
+            ₹
+            {(
+              projectEmployees.reduce(
+                (total, employee) =>
+                  total +
+                  employee.dailyWage *
+                    attendanceRecords.filter(
+                      (record) =>
+                        record.employeeId === employee.id &&
+                        record.status === "Present"
+                    ).length,
+                0
+              ) -
+              workerPayments.reduce(
+                (total, payment) =>
+                  total + Number(payment.amount),
+                0
+              )
+            ).toLocaleString("en-IN")}
+          </strong>
+        </div>
+
+      </div>
+
+      {/* Add Payment */}
+
+      {!showPaymentForm && (
+        <button
+          type="button"
+          className="add-button"
+          onClick={() => {
+            resetPaymentForm();
+            setShowPaymentForm(true);
+          }}
+        >
+          + Add Worker Payment
+        </button>
+      )}
+
+      {/* Payment Form */}
+
+      {showPaymentForm && (
+        <div className="payment-form">
+
+          <div className="section-header">
+            <h3>
+              {editingPaymentId !== null
+                ? "Edit Worker Payment"
+                : "Add Worker Payment"}
+            </h3>
+          </div>
+
+          <div className="payment-form-grid">
+
+            <div className="form-group">
+              <label>Worker</label>
+
+              <select
+                name="employeeId"
+                value={paymentForm.employeeId}
+                onChange={handlePaymentChange}
+              >
+                <option value="">Select Worker</option>
+
+                {projectEmployees.map((employee) => (
+                  <option
+                    key={employee.id}
+                    value={employee.id}
+                  >
+                    {employee.name} - ₹{employee.dailyWage}/day
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Payment Date</label>
+
+              <input
+                type="date"
+                name="date"
+                value={paymentForm.date}
+                max={new Date().toISOString().split("T")[0]}
+                onChange={handlePaymentChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Amount Paid (₹)</label>
+
+              <input
+                type="number"
+                name="amount"
+                min="0"
+                step="0.01"
+                value={paymentForm.amount}
+                onChange={handlePaymentChange}
+                placeholder="e.g. 5000"
+              />
+            </div>
+
+          </div>
+
+          <div className="form-group">
+            <label>Payment Note</label>
+
+            <textarea
+              name="note"
+              value={paymentForm.note}
+              onChange={handlePaymentChange}
+              rows="3"
+              placeholder="e.g. Weekly wage payment"
+            />
+          </div>
+
+          <div className="form-actions">
+
+            <button
+              type="button"
+              className="cancel-button"
+              onClick={() => {
+                resetPaymentForm();
+                setShowPaymentForm(false);
+              }}
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              className="save-button"
+              onClick={handleSavePayment}
+            >
+              {editingPaymentId !== null
+                ? "Update Payment"
+                : "Save Payment"}
+            </button>
+
+          </div>
+
+        </div>
+      )}
+
+      {/* Worker Balance */}
+
+      <div className="worker-payment-summary">
+
+        <div className="section-header">
+          <h3>Worker Payment Summary</h3>
+        </div>
+
+        {projectEmployees.length === 0 ? (
+          <div className="empty-state">
+            <p>No workers assigned to this project.</p>
+          </div>
+        ) : (
+          <div className="worker-payment-list">
+
+            {projectEmployees.map((employee) => {
+
+              const presentDays = attendanceRecords.filter(
+                (record) =>
+                  record.employeeId === employee.id &&
+                  record.status === "Present"
+              ).length;
+
+              const totalEarned =
+                presentDays * employee.dailyWage;
+
+              const totalPaid = workerPayments
+                .filter(
+                  (payment) =>
+                    payment.employeeId === employee.id
+                )
+                .reduce(
+                  (total, payment) =>
+                    total + Number(payment.amount),
+                  0
+                );
+
+              const remaining = totalEarned - totalPaid;
+
+              return (
+                <div
+                  className="worker-payment-card"
+                  key={employee.id}
+                >
+
+                  <div>
+                    <h3>{employee.name}</h3>
+
+                    <span>
+                      Daily Wage: ₹{employee.dailyWage}
+                    </span>
+                  </div>
+
+                  <div className="worker-payment-values">
+
+                    <div>
+                      <span>Present Days</span>
+                      <strong>{presentDays}</strong>
+                    </div>
+
+                    <div>
+                      <span>Earned</span>
+                      <strong>
+                        ₹{totalEarned.toLocaleString("en-IN")}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Paid</span>
+                      <strong>
+                        ₹{totalPaid.toLocaleString("en-IN")}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Remaining</span>
+                      <strong>
+                        ₹{remaining.toLocaleString("en-IN")}
+                      </strong>
+                    </div>
+
+                  </div>
+
+                </div>
+              );
+            })}
+
+          </div>
+        )}
+
+      </div>
+
+      {/* Payment History */}
+
+      <div className="payment-records">
+
+        <div className="section-header">
+          <h3>Payment History</h3>
+        </div>
+
+        {workerPayments.length === 0 ? (
+
+          <div className="empty-state">
+            <p>No worker payments recorded yet.</p>
+          </div>
+
+        ) : (
+
+          <div className="payment-list">
+
+            {workerPayments
+              .slice()
+              .sort((a, b) => b.date.localeCompare(a.date))
+              .map((payment) => {
+
+                const employee = projectEmployees.find(
+                  (item) => item.id === payment.employeeId
+                );
+
+                return (
+                  <div
+                    className="payment-card"
+                    key={payment.id}
+                  >
+
+                    <div className="payment-card-header">
+
+                      <div>
+                        <h3>
+                          {employee
+                            ? employee.name
+                            : "Unknown Worker"}
+                        </h3>
+
+                        <span>
+                          {payment.date}
+                        </span>
+                      </div>
+
+                      <div className="payment-actions">
+
+                        <button
+                          type="button"
+                          className="edit-button"
+                          onClick={() =>
+                            handleEditPayment(payment)
+                          }
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          type="button"
+                          className="delete-button"
+                          onClick={() =>
+                            handleDeletePayment(payment.id)
+                          }
+                        >
+                          Delete
+                        </button>
+
+                      </div>
+
+                    </div>
+
+                    <div className="payment-amount">
+                      ₹{Number(payment.amount).toLocaleString("en-IN")}
+                    </div>
+
+                    {payment.note && (
+                      <div className="payment-note">
+                        <strong>Note</strong>
+                        <p>{payment.note}</p>
+                      </div>
+                    )}
+
+                  </div>
+                );
+              })}
+
+          </div>
+        )}
+
+      </div>
+
+    </div>
+  </div>
+)}
 
       {showMaterials && (
   <div className="module-overlay">
