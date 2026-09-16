@@ -5,7 +5,20 @@ function ProjectDetails({ project, employees, onBack, onProjectUpdate }) {
   const [showAttendance, setShowAttendance] = useState(false);
   const [showDailyWork, setShowDailyWork] = useState(false);
   const [showPayments, setShowPayments] = useState(false);
+  const [showClientPayments, setShowClientPayments] = useState(false);
   const [workerPayments, setWorkerPayments] = useState([]);
+  // Client Payments
+const [clientPayments, setClientPayments] = useState([]);
+const [showClientPaymentForm, setShowClientPaymentForm] = useState(false);
+const [editingClientPaymentId, setEditingClientPaymentId] = useState(null);
+
+const [clientPaymentForm, setClientPaymentForm] = useState({
+  date: new Date().toISOString().split("T")[0],
+  amount: "",
+  paymentMode: "",
+  reference: "",
+  note: "",
+});
 const [showPaymentForm, setShowPaymentForm] = useState(false);
 const [editingPaymentId, setEditingPaymentId] = useState(null);
 
@@ -122,6 +135,137 @@ const handleSavePayment = () => {
   resetPaymentForm();
   setShowPaymentForm(false);
 };
+
+// ---------------- CLIENT PAYMENT HANDLERS ----------------
+
+const handleClientPaymentChange = (event) => {
+  const { name, value } = event.target;
+
+  setClientPaymentForm((previousForm) => ({
+    ...previousForm,
+    [name]: value,
+  }));
+};
+
+const resetClientPaymentForm = () => {
+  setClientPaymentForm({
+    date: new Date().toISOString().split("T")[0],
+    amount: "",
+    paymentMode: "",
+    reference: "",
+    note: "",
+  });
+
+  setEditingClientPaymentId(null);
+};
+
+const handleSaveClientPayment = () => {
+  if (!clientPaymentForm.date) {
+    alert("Please select a payment date.");
+    return;
+  }
+
+  if (!clientPaymentForm.amount || Number(clientPaymentForm.amount) <= 0) {
+    alert("Payment amount must be greater than 0.");
+    return;
+  }
+
+  if (!clientPaymentForm.paymentMode) {
+    alert("Please select a payment mode.");
+    return;
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+
+  if (clientPaymentForm.date > today) {
+    alert("Payment date cannot be in the future.");
+    return;
+  }
+
+  const amount = Number(clientPaymentForm.amount);
+
+  const currentReceived = clientPayments
+    .filter((payment) => payment.id !== editingClientPaymentId)
+    .reduce((total, payment) => total + payment.amount, 0);
+
+  if (currentReceived + amount > Number(project.contractValue || 0)) {
+    alert("Total received cannot be greater than the project contract value.");
+    return;
+  }
+
+  const paymentData = {
+    date: clientPaymentForm.date,
+    amount,
+    paymentMode: clientPaymentForm.paymentMode,
+    reference: clientPaymentForm.reference.trim(),
+    note: clientPaymentForm.note.trim(),
+  };
+
+  if (editingClientPaymentId !== null) {
+    setClientPayments((previousPayments) =>
+      previousPayments.map((payment) =>
+        payment.id === editingClientPaymentId
+          ? {
+              ...payment,
+              ...paymentData,
+            }
+          : payment
+      )
+    );
+  } else {
+    setClientPayments((previousPayments) => [
+      ...previousPayments,
+      {
+        id: Date.now(),
+        ...paymentData,
+      },
+    ]);
+  }
+
+  resetClientPaymentForm();
+  setShowClientPaymentForm(false);
+};
+
+const handleEditClientPayment = (payment) => {
+  setEditingClientPaymentId(payment.id);
+
+  setClientPaymentForm({
+    date: payment.date,
+    amount: payment.amount,
+    paymentMode: payment.paymentMode,
+    reference: payment.reference || "",
+    note: payment.note || "",
+  });
+
+  setShowClientPaymentForm(true);
+};
+
+const handleDeleteClientPayment = (paymentId) => {
+  const confirmed = window.confirm(
+    "Are you sure you want to delete this client payment?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  setClientPayments((previousPayments) =>
+    previousPayments.filter((payment) => payment.id !== paymentId)
+  );
+};
+
+// Client payment calculations
+const totalClientReceived = clientPayments.reduce(
+  (total, payment) => total + payment.amount,
+  0
+);
+
+const contractValue = Number(project.contractValue || 0);
+
+const remainingClientBalance = Math.max(
+  contractValue - totalClientReceived,
+  0
+);
 
 const handleEditPayment = (payment) => {
   setEditingPaymentId(payment.id);
@@ -815,6 +959,18 @@ const handleDeleteDailyWork = (recordId) => {
   <span>Track project payments</span>
 </div>
 
+<div
+  className="module-card"
+  onClick={() => {
+    resetClientPaymentForm();
+    setShowClientPaymentForm(false);
+    setShowClientPayments(true);
+  }}
+>
+  <strong>Client Payments</strong>
+  <span>Track payments received from client</span>
+</div>
+
        <div
   className="module-card"
   onClick={() => {
@@ -850,13 +1006,13 @@ const handleDeleteDailyWork = (recordId) => {
 
               <button
                 type="button"
-                className="modal-close"
+                className="close-button"
                 onClick={() => {
                   setShowExpenseForm(false);
                   setEditingExpenseId(null);
                 }}
               >
-                ×
+                Close
               </button>
             </div>
 
@@ -1114,13 +1270,13 @@ const handleDeleteDailyWork = (recordId) => {
 
       <button
         type="button"
-        className="modal-close"
+        className="close-button"
         onClick={() => {
           setShowDailyWork(false);
           setEditingDailyWorkId(null);
         }}
       >
-        ×
+        Close
       </button>
     </div>
 
@@ -1334,10 +1490,10 @@ const handleDeleteDailyWork = (recordId) => {
 
             <button
               type="button"
-              className="modal-close"
+              className="close-button"
               onClick={() => setShowWorkers(false)}
             >
-              ×
+              Close
             </button>
           </div>
 
@@ -1409,7 +1565,7 @@ const handleDeleteDailyWork = (recordId) => {
             resetPaymentForm();
           }}
         >
-          ✕
+          Close
         </button>
       </div>
 
@@ -1791,6 +1947,287 @@ const handleDeleteDailyWork = (recordId) => {
   </div>
 )}
 
+{/* ================= CLIENT PAYMENTS ================= */}
+
+{showClientPayments && (
+  <div className="payment-section client-payment-section">
+
+    <div className="payment-section-header">
+      <div>
+        <h2>Client Payments</h2>
+        <p>
+          Payments received from client for {project.name}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        className="close-button"
+        onClick={() => {
+          setShowClientPayments(false);
+          resetClientPaymentForm();
+          setShowClientPaymentForm(false);
+        }}
+      >
+        Close
+      </button>
+    </div>
+
+    {/* Client Payment Summary */}
+
+    <div className="payment-summary-grid">
+
+      <div className="payment-summary-card">
+        <span>Contract Value</span>
+        <strong>
+          ₹{contractValue.toLocaleString("en-IN")}
+        </strong>
+      </div>
+
+      <div className="payment-summary-card">
+        <span>Total Received</span>
+        <strong>
+          ₹{totalClientReceived.toLocaleString("en-IN")}
+        </strong>
+      </div>
+
+      <div className="payment-summary-card">
+        <span>Remaining Receivable</span>
+        <strong>
+          ₹{remainingClientBalance.toLocaleString("en-IN")}
+        </strong>
+      </div>
+
+      <div className="payment-summary-card">
+        <span>Total Transactions</span>
+        <strong>
+          {clientPayments.length}
+        </strong>
+      </div>
+
+    </div>
+
+    {/* Add Payment Button */}
+
+    {!showClientPaymentForm && (
+      <button
+        className="add-payment-button"
+        onClick={() => {
+          resetClientPaymentForm();
+          setShowClientPaymentForm(true);
+        }}
+      >
+        + Add Client Payment
+      </button>
+    )}
+
+    {/* Client Payment Form */}
+
+    {showClientPaymentForm && (
+      <div className="payment-form client-payment-form">
+
+        <h3>
+          {editingClientPaymentId !== null
+            ? "Edit Client Payment"
+            : "Add Client Payment"}
+        </h3>
+
+        <div className="payment-form-grid">
+
+          <div className="form-group">
+            <label>Payment Date</label>
+
+            <input
+              type="date"
+              name="date"
+              value={clientPaymentForm.date}
+              max={new Date().toISOString().split("T")[0]}
+              onChange={handleClientPaymentChange}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Amount Received</label>
+
+            <input
+              type="number"
+              name="amount"
+              min="1"
+              placeholder="Enter amount"
+              value={clientPaymentForm.amount}
+              onChange={handleClientPaymentChange}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Payment Mode</label>
+
+            <select
+              name="paymentMode"
+              value={clientPaymentForm.paymentMode}
+              onChange={handleClientPaymentChange}
+            >
+              <option value="">Select payment mode</option>
+              <option value="Cash">Cash</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="UPI">UPI</option>
+              <option value="Cheque">Cheque</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Reference / Transaction No.</label>
+
+            <input
+              type="text"
+              name="reference"
+              placeholder="Optional"
+              value={clientPaymentForm.reference}
+              onChange={handleClientPaymentChange}
+            />
+          </div>
+
+          <div className="form-group full-width">
+            <label>Note</label>
+
+            <textarea
+              name="note"
+              rows="3"
+              placeholder="Optional payment note"
+              value={clientPaymentForm.note}
+              onChange={handleClientPaymentChange}
+            />
+          </div>
+
+        </div>
+
+        <div className="form-actions">
+
+          <button
+            type="button"
+            className="cancel-button"
+            onClick={() => {
+              resetClientPaymentForm();
+              setShowClientPaymentForm(false);
+            }}
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            className="save-button"
+            onClick={handleSaveClientPayment}
+          >
+            {editingClientPaymentId !== null
+              ? "Update Payment"
+              : "Save Payment"}
+          </button>
+
+        </div>
+
+      </div>
+    )}
+
+    {/* Payment History */}
+
+    <div className="client-payment-history">
+
+      <div className="section-title-row">
+        <h3>Payment History</h3>
+        <span>
+          {clientPayments.length} payment
+          {clientPayments.length !== 1 ? "s" : ""}
+        </span>
+      </div>
+
+      {clientPayments.length === 0 ? (
+        <div className="empty-payment-state">
+          <p>No client payments recorded yet.</p>
+        </div>
+      ) : (
+        <div className="payment-list">
+
+          {[...clientPayments]
+            .sort((a, b) => b.date.localeCompare(a.date))
+            .map((payment) => (
+              <div
+                className="payment-card client-payment-card"
+                key={payment.id}
+              >
+
+                <div className="payment-card-header">
+
+                  <div>
+                    <strong>
+                      ₹{payment.amount.toLocaleString("en-IN")}
+                    </strong>
+
+                    <span>
+                      {payment.date}
+                    </span>
+                  </div>
+
+                  <div className="payment-actions">
+
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleEditClientPayment(payment);
+                      }}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleDeleteClientPayment(payment.id);
+                      }}
+                    >
+                      Delete
+                    </button>
+
+                  </div>
+
+                </div>
+
+                <div className="client-payment-details">
+
+                  <div>
+                    <span>Payment Mode</span>
+                    <strong>{payment.paymentMode}</strong>
+                  </div>
+
+                  {payment.reference && (
+                    <div>
+                      <span>Reference</span>
+                      <strong>{payment.reference}</strong>
+                    </div>
+                  )}
+
+                </div>
+
+                {payment.note && (
+                  <p className="payment-note">
+                    {payment.note}
+                  </p>
+                )}
+
+              </div>
+            ))}
+
+        </div>
+      )}
+
+    </div>
+
+  </div>
+)}
+
       {showMaterials && (
   <div className="module-overlay">
     <div className="module-panel">
@@ -1810,7 +2247,7 @@ const handleDeleteDailyWork = (recordId) => {
             resetMaterialForm();
           }}
         >
-          ✕
+          Close
         </button>
       </div>
 
@@ -2162,10 +2599,10 @@ const handleDeleteDailyWork = (recordId) => {
 
       <button
         type="button"
-        className="modal-close"
+        className="close-button"
         onClick={() => setShowAttendance(false)}
       >
-        ×
+        Close
       </button>
     </div>
 
