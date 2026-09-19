@@ -37,11 +37,54 @@ function Projects({ projects, onProjectsChange, onProjectSelect }) {
 
 const handleAddProject = (event) => {
   event.preventDefault();
-  if (formData.expectedCompletion < formData.startDate) {
-  alert("Expected completion date cannot be before start date.");
-  return;
-}
 
+  if (!formData.name.trim()) {
+    alert("Please enter the project name.");
+    return;
+  }
+
+  if (!formData.client.trim()) {
+    alert("Please enter the client name.");
+    return;
+  }
+
+  if (!formData.location.trim()) {
+    alert("Please enter the project location.");
+    return;
+  }
+
+  if (!formData.supervisor.trim()) {
+    alert("Please enter the supervisor name.");
+    return;
+  }
+
+  if (!formData.projectType) {
+    alert("Please select a project type.");
+    return;
+  }
+
+  if (!formData.startDate) {
+    alert("Please select the project start date.");
+    return;
+  }
+
+  if (!formData.expectedCompletion) {
+    alert("Please select the expected completion date.");
+    return;
+  }
+
+  if (formData.expectedCompletion < formData.startDate) {
+    alert("Expected completion date cannot be before start date.");
+    return;
+  }
+
+  if (
+    formData.contractValue === "" ||
+    Number(formData.contractValue) <= 0
+  ) {
+    alert("Contract value must be greater than 0.");
+    return;
+  }
   const newProject = {
     id: Date.now(),
     name: formData.name,

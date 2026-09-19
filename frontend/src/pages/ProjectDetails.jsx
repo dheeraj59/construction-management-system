@@ -81,11 +81,18 @@ const resetMaterialForm = () => {
 
 const handleSaveMaterial = () => {
   if (!materialForm.name.trim()) { alert("Please enter material name."); return; }
+
   if (!materialForm.category) { alert("Please select a material category."); return; }
   if (!materialForm.quantity || Number(materialForm.quantity) <= 0) { alert("Quantity must be greater than 0."); return; }
   if (!materialForm.unit) { alert("Please select a unit."); return; }
   if (!materialForm.unitPrice || Number(materialForm.unitPrice) < 0) { alert("Please enter a valid unit price."); return; }
   if (!materialForm.supplier.trim()) { alert("Please enter supplier name."); return; }
+  const today = new Date().toISOString().split("T")[0];
+
+if (materialForm.purchaseDate > today) {
+  alert("Purchase date cannot be in the future.");
+  return;
+}
 
   const materialData = {
     name: materialForm.name.trim(), category: materialForm.category,
@@ -452,7 +459,55 @@ const notMarkedCount =
   projectEmployees.length - presentCount - absentCount;
 
   const handleEditProject = (event) => {
-    event.preventDefault();
+  event.preventDefault();
+
+  if (!editForm.name.trim()) {
+    alert("Project name cannot be empty.");
+    return;
+  }
+
+  if (!editForm.client.trim()) {
+    alert("Client name cannot be empty.");
+    return;
+  }
+
+  if (!editForm.location.trim()) {
+    alert("Project location cannot be empty.");
+    return;
+  }
+
+  if (!editForm.supervisor.trim()) {
+    alert("Supervisor name cannot be empty.");
+    return;
+  }
+
+  if (!editForm.projectType) {
+    alert("Please select a project type.");
+    return;
+  }
+
+  if (!editForm.startDate) {
+    alert("Please select the start date.");
+    return;
+  }
+
+  if (!editForm.expectedCompletion) {
+    alert("Please select the expected completion date.");
+    return;
+  }
+
+  if (editForm.expectedCompletion < editForm.startDate) {
+    alert("Expected completion date cannot be before start date.");
+    return;
+  }
+
+  if (
+    editForm.contractValue === "" ||
+    Number(editForm.contractValue) <= 0
+  ) {
+    alert("Contract value must be greater than 0.");
+    return;
+  }
 
     if (editForm.expectedCompletion < editForm.startDate) {
       alert("Expected completion date cannot be before start date.");
@@ -505,7 +560,35 @@ const notMarkedCount =
   };
 
   const handleAddExpense = (event) => {
-    event.preventDefault();
+  event.preventDefault();
+
+  if (!expenseForm.category) {
+    alert("Please select an expense category.");
+    return;
+  }
+
+  if (!expenseForm.amount || Number(expenseForm.amount) <= 0) {
+    alert("Expense amount must be greater than 0.");
+    return;
+  }
+
+  if (!expenseForm.date) {
+    alert("Please select an expense date.");
+    return;
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+
+  if (expenseForm.date > today) {
+    alert("Expense date cannot be in the future.");
+    return;
+  }
+
+  if (!expenseForm.paidTo.trim()) {
+    alert("Please enter who the payment was made to.");
+    return;
+  }
+
 
     if (editingExpenseId !== null) {
       setExpenses((previousExpenses) =>
@@ -579,6 +662,10 @@ const handleSaveDailyWork = (event) => {
     alert("Please select the work status.");
     return;
   }
+  if (dailyWorkForm.workersPresent === "") {
+  alert("Please enter the number of workers present.");
+  return;
+}
 
   if (Number(dailyWorkForm.progress) < 0 || Number(dailyWorkForm.progress) > 100) {
     alert("Progress must be between 0 and 100.");

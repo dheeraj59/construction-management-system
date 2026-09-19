@@ -34,6 +34,35 @@ const [editEmployee, setEditEmployee] = useState(null);
 const handleAddEmployee = (event) => {
   event.preventDefault();
 
+  const name = formData.name.trim();
+  const phone = formData.phone.trim();
+  const dailyWage = Number(formData.dailyWage);
+
+  if (!name) {
+    alert("Please enter the employee name.");
+    return;
+  }
+
+  if (!/^\d{10}$/.test(phone)) {
+    alert("Please enter a valid 10-digit phone number.");
+    return;
+  }
+
+  if (!formData.role) {
+    alert("Please select an employee role.");
+    return;
+  }
+
+  if (!formData.dailyWage || dailyWage <= 0) {
+    alert("Daily wage must be greater than 0.");
+    return;
+  }
+
+  if (!formData.project) {
+    alert("Please select a project.");
+    return;
+  }
+
   const newEmployee = {
     id: Date.now(),
     name: formData.name,
@@ -62,6 +91,36 @@ const handleAddEmployee = (event) => {
 
 const handleEditEmployee = (event) => {
   event.preventDefault();
+
+  const name = editEmployee.name.trim();
+  const phone = editEmployee.phone.trim();
+  const dailyWage = Number(editEmployee.dailyWage);
+
+  if (!name) {
+    alert("Please enter the employee name.");
+    return;
+  }
+
+  if (!/^\d{10}$/.test(phone)) {
+    alert("Please enter a valid 10-digit phone number.");
+    return;
+  }
+
+  if (!editEmployee.role) {
+    alert("Please select an employee role.");
+    return;
+  }
+
+  if (!editEmployee.dailyWage || dailyWage <= 0) {
+    alert("Daily wage must be greater than 0.");
+    return;
+  }
+
+  if (!editEmployee.project) {
+    alert("Please select a project.");
+    return;
+  }
+
 
   setEmployees((previousEmployees) =>
     previousEmployees.map((employee) =>

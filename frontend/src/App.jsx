@@ -122,7 +122,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
 
 
-  const handleLogin = (event) => {
+const handleLogin = (event) => {
   event.preventDefault();
 
   setError("");
@@ -130,8 +130,32 @@ function App() {
   const username = event.target.username.value.trim();
   const password = event.target.password.value.trim();
 
-  if (!username || !password) {
-    setError("Please enter your phone/email and password.");
+  if (!username) {
+    setError("Please enter your phone number or email.");
+    return;
+  }
+
+  if (!password) {
+    setError("Please enter your password.");
+    return;
+  }
+
+  // Basic email/phone validation
+  const isEmail = username.includes("@");
+  const isPhone = /^\d{10}$/.test(username);
+
+  if (!isEmail && !isPhone) {
+    setError("Please enter a valid 10-digit phone number or email address.");
+    return;
+  }
+
+  if (isEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username)) {
+    setError("Please enter a valid email address.");
+    return;
+  }
+
+  if (password.length < 6) {
+    setError("Password must be at least 6 characters.");
     return;
   }
 
