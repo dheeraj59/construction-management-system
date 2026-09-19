@@ -5,6 +5,7 @@ function Sidebar({ role, currentPage, onPageChange })  {
     { label: "Projects", page: "projects" },
     { label: "Employees", page: "employees" },
     { label: "Attendance", page: "attendance" },
+     { label: "Reports", page: "reports" },
   ],
 
   Supervisor: [
@@ -12,6 +13,7 @@ function Sidebar({ role, currentPage, onPageChange })  {
     { label: "Projects", page: "projects" },
     { label: "Employees", page: "employees" },
     { label: "Attendance", page: "attendance" },
+     { label: "Reports", page: "reports" },
   ],
 
   Worker: [

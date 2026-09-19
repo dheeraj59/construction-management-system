@@ -7,6 +7,7 @@ import Topbar from "./components/Topbar";
 import AdminDashboard from "./pages/AdminDashboard";
 import SupervisorDashboard from "./pages/SupervisorDashboard";
 import WorkerDashboard from "./pages/WorkerDashboard";
+import Reports from "./pages/Reports";
 
 import { useState } from "react";
 import "./App.css";
@@ -321,6 +322,12 @@ function App() {
 )}
 
   {currentPage === "attendance" && <Attendance />}
+  {currentPage === "reports" && (selectedRole === "Admin" || selectedRole === "Supervisor") && (
+  <Reports
+    projects={projects}
+    employees={employees}
+  />
+)}
 </main>
         </div>
       </div>
