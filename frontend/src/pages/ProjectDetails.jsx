@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-function ProjectDetails({ project, employees, onBack, onProjectUpdate }) {
+function ProjectDetails({project,employees,onBack,onProjectUpdate,dailyWorkRecords,onDailyWorkRecordsChange,}) {
   const [showWorkers, setShowWorkers] = useState(false);
   const [showAttendance, setShowAttendance] = useState(false);
   const [showDailyWork, setShowDailyWork] = useState(false);
@@ -31,7 +31,7 @@ const [paymentForm, setPaymentForm] = useState({
  
   const [editingDailyWorkId, setEditingDailyWorkId] = useState(null);
 
-const [dailyWorkRecords, setDailyWorkRecords] = useState([]);
+
 
 const [dailyWorkForm, setDailyWorkForm] = useState({
   date: new Date().toISOString().split("T")[0],
@@ -41,6 +41,9 @@ const [dailyWorkForm, setDailyWorkForm] = useState({
   workersPresent: "",
   notes: "",
 });
+const projectDailyWorkRecords = dailyWorkRecords.filter(
+  (record) => record.projectId === project.id
+);
  const [showMaterials, setShowMaterials] = useState(false);
   const [materials, setMaterials] = useState([]);
   const [showMaterialForm, setShowMaterialForm] = useState(false);
@@ -688,7 +691,7 @@ const handleSaveDailyWork = (event) => {
   }
 
   if (editingDailyWorkId !== null) {
-    setDailyWorkRecords((previousRecords) =>
+    onDailyWorkRecordsChange((previousRecords) =>
       previousRecords.map((record) =>
         record.id === editingDailyWorkId
           ? {
@@ -702,16 +705,17 @@ const handleSaveDailyWork = (event) => {
     );
   } else {
     const newRecord = {
-      id: Date.now(),
-      ...dailyWorkForm,
-      progress: Number(dailyWorkForm.progress),
-      workersPresent: Number(dailyWorkForm.workersPresent),
-    };
+  id: Date.now(),
+  projectId: project.id,
+  ...dailyWorkForm,
+  progress: Number(dailyWorkForm.progress),
+  workersPresent: Number(dailyWorkForm.workersPresent),
+};
 
-    setDailyWorkRecords((previousRecords) => [
-      newRecord,
-      ...previousRecords,
-    ]);
+   onDailyWorkRecordsChange((previousRecords) => [
+  newRecord,
+  ...previousRecords,
+]);
   }
 
   // Update project's current progress
@@ -762,9 +766,9 @@ const handleDeleteDailyWork = (recordId) => {
     return;
   }
 
-  setDailyWorkRecords((previousRecords) =>
-    previousRecords.filter((record) => record.id !== recordId)
-  );
+  onDailyWorkRecordsChange((previousRecords) =>
+  previousRecords.filter((record) => record.id !== recordId)
+);
 };
 
   return (
@@ -1482,7 +1486,7 @@ const handleDeleteDailyWork = (recordId) => {
         </div>
       </div>
 
-      {dailyWorkRecords.length === 0 ? (
+      {projectDailyWorkRecords.length === 0 ? (
         <div className="empty-state">
           <h3>No daily work reports yet</h3>
           <p>
@@ -1491,7 +1495,7 @@ const handleDeleteDailyWork = (recordId) => {
         </div>
       ) : (
         <div className="daily-work-list">
-          {dailyWorkRecords.map((record) => (
+          {projectDailyWorkRecords.map((record) => (
             <div
               className="daily-work-card"
               key={record.id}

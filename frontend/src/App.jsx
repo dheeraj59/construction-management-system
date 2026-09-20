@@ -117,6 +117,7 @@ function App() {
     totalExpenses: 650000,
   },
 ]);
+  const [dailyWorkRecords, setDailyWorkRecords] = useState([]);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -280,12 +281,20 @@ const handleLogin = (event) => {
        <main className="dashboard-content">
   {currentPage === "dashboard" && (
     <>
-      {selectedRole === "Admin" && <AdminDashboard />}
+      {selectedRole === "Admin" && (
+  <AdminDashboard
+    projects={projects}
+    employees={employees}
+  />
+)}
 
-      {selectedRole === "Supervisor" && (
-        <SupervisorDashboard />
-      )}
-
+   {selectedRole === "Supervisor" && (
+  <SupervisorDashboard
+    projects={projects}
+    employees={employees}
+    dailyWorkRecords={dailyWorkRecords}
+  />
+)}
       {selectedRole === "Worker" && <WorkerDashboard />}
     </>
   )}
@@ -307,6 +316,8 @@ const handleLogin = (event) => {
   <ProjectDetails
     project={selectedProject}
      employees={employees}
+     dailyWorkRecords={dailyWorkRecords}
+     onDailyWorkRecordsChange={setDailyWorkRecords}
     
     onBack={() => {
       setSelectedProject(null);

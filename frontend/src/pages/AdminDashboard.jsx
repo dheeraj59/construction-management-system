@@ -1,4 +1,29 @@
-function AdminDashboard() {
+function AdminDashboard({ projects, employees }) {
+
+    const activeProjects = projects.filter(
+    (project) => project.status === "In Progress"
+  ).length;
+
+  const completedProjects = projects.filter(
+    (project) => project.status === "Completed"
+  ).length;
+
+  const delayedProjects = projects.filter(
+    (project) => project.status === "Delayed"
+  ).length;
+
+  const activeEmployees = employees.filter(
+    (employee) => employee.status === "Active"
+  ).length;
+
+  const overallProgress =
+    projects.length > 0
+      ? Math.round(
+          projects.reduce((total, project) => total + project.progress, 0) /
+            projects.length
+        )
+      : 0;
+
   return (
     <div>
   <h2>Business Overview</h2>
@@ -9,17 +34,17 @@ function AdminDashboard() {
   <div className="stats-grid">
     <div className="stat-card">
       <span>Active Projects</span>
-      <strong>12</strong>
+      <strong>{activeProjects}</strong>
     </div>
 
     <div className="stat-card">
       <span>Completed Projects</span>
-      <strong>8</strong>
+      <strong>{completedProjects}</strong>
     </div>
 
     <div className="stat-card">
       <span>Total Employees</span>
-      <strong>156</strong>
+      <strong>{employees.length}</strong>
     </div>
 
     <div className="stat-card">
@@ -39,35 +64,29 @@ function AdminDashboard() {
 
     <div className="stat-card">
       <span>Projects Delayed</span>
-      <strong>3</strong>
+      <strong>{delayedProjects}</strong>
     </div>
 
     <div className="stat-card">
       <span>Overall Progress</span>
-      <strong>68%</strong>
+      <strong>{overallProgress}%</strong>
     </div>
   </div>
 
   <div className="dashboard-section">
-    <h3>Recent Project Updates</h3>
+  <h3>Project Status</h3>
 
-    <div className="activity-list">
-      <div className="activity-item">
-        <strong>ABC Building</strong>
-        <span>Progress updated to 65%</span>
+  <div className="activity-list">
+    {projects.map((project) => (
+      <div className="activity-item" key={project.id}>
+        <strong>{project.name}</strong>
+        <span>
+          {project.status} • {project.progress}% completed
+        </span>
       </div>
-
-      <div className="activity-item">
-        <strong>XYZ Water Tank</strong>
-        <span>Material request submitted</span>
-      </div>
-
-      <div className="activity-item">
-        <strong>Green Residency</strong>
-        <span>Project delayed by 2 days</span>
-      </div>
-    </div>
+    ))}
   </div>
+</div>
 </div>
   );
 }
