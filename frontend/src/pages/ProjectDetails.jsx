@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-function ProjectDetails({project,employees,onBack,onProjectUpdate,dailyWorkRecords,onDailyWorkRecordsChange,}) {
+function ProjectDetails({project,employees,onBack,onProjectUpdate,attendanceRecords, onAttendanceRecordsChange,dailyWorkRecords,onDailyWorkRecordsChange,}) {
   const [showWorkers, setShowWorkers] = useState(false);
   const [showAttendance, setShowAttendance] = useState(false);
   const [showDailyWork, setShowDailyWork] = useState(false);
@@ -322,7 +322,7 @@ const [attendanceDate, setAttendanceDate] = useState(
   new Date().toISOString().split("T")[0]
 );
 
-const [attendanceRecords, setAttendanceRecords] = useState([]);
+
   const [status, setStatus] = useState(project.status);
   const [progress, setProgress] = useState(project.progress);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -419,7 +419,7 @@ const getAttendance = (employeeId) => {
 };
 
 const markAttendance = (employeeId, newStatus) => {
-  setAttendanceRecords((previousRecords) => {
+  onAttendanceRecordsChange((previousRecords) => {
     const existingRecord = previousRecords.find(
       (record) =>
         record.employeeId === employeeId &&

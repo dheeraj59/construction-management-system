@@ -2,6 +2,7 @@ function SupervisorDashboard({
   projects,
   employees,
   dailyWorkRecords,
+  attendanceRecords,
 }) {
    const supervisorName = "Raj Kumar";
 
@@ -28,6 +29,18 @@ function SupervisorDashboard({
   : [];
 
 const latestDailyWork = projectDailyWorkRecords[0];
+const today = new Date().toISOString().split("T")[0];
+
+const presentToday = assignedProject
+  ? projectWorkers.filter((employee) =>
+      attendanceRecords.some(
+        (record) =>
+          record.employeeId === employee.id &&
+          record.date === today &&
+          record.status === "Present"
+      )
+    ).length
+  : 0;
 
   return (
     <div>
@@ -51,7 +64,7 @@ const latestDailyWork = projectDailyWorkRecords[0];
 
   <div className="stat-card">
     <span>Present Today</span>
-    <strong>16</strong>
+    <strong>{presentToday}</strong>
   </div>
 
   <div className="stat-card">

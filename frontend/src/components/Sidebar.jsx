@@ -1,4 +1,4 @@
-function Sidebar({ role, currentPage, onPageChange })  {
+function Sidebar({ role, currentPage, onPageChange, onLogout }) {
   const navigationItems = {
   Admin: [
     { label: "Dashboard", page: "dashboard" },
@@ -42,6 +42,12 @@ function Sidebar({ role, currentPage, onPageChange })  {
   </button>
 ))}
       </nav>
+      <button
+  className="logout-button"
+  onClick={onLogout}
+>
+  Logout
+</button>
 
       <div className="sidebar-user">
         <strong>{role}</strong>

@@ -1,4 +1,47 @@
-function WorkerDashboard() {
+function WorkerDashboard({
+  projects,
+  employees,
+  attendanceRecords,
+  dailyWorkRecords,
+}) {
+  const workerName = "Kamal";
+
+const worker = employees.find(
+  (employee) => employee.name === workerName
+);
+
+const assignedProject = worker
+  ? projects.find((project) => project.name === worker.project)
+  : null;
+
+const today = new Date().toISOString().split("T")[0];
+
+const todayAttendance = worker
+  ? attendanceRecords.find(
+      (record) =>
+        record.employeeId === worker.id &&
+        record.date === today
+    )
+  : null;
+
+const currentMonth = today.slice(0, 7);
+
+const monthlyPresentDays = worker
+  ? attendanceRecords.filter(
+      (record) =>
+        record.employeeId === worker.id &&
+        record.date.startsWith(currentMonth) &&
+        record.status === "Present"
+    ).length
+  : 0;
+
+const workerDailyWorkRecords = assignedProject
+  ? dailyWorkRecords.filter(
+      (record) => record.projectId === assignedProject.id
+    )
+  : [];
+
+const latestDailyWork = workerDailyWorkRecords[0];
   return (
     <div>
   <h2>My Dashboard</h2>
@@ -9,17 +52,21 @@ function WorkerDashboard() {
   <div className="stats-grid">
     <div className="stat-card">
       <span>Assigned Project</span>
-      <strong>ABC Building</strong>
+      <strong>
+  {assignedProject ? assignedProject.name : "No Project"}
+</strong>
     </div>
 
     <div className="stat-card">
       <span>This Month Attendance</span>
-      <strong>24 Days</strong>
+    <strong>{monthlyPresentDays} Days</strong>
     </div>
 
     <div className="stat-card">
       <span>Today's Status</span>
-      <strong>Present</strong>
+      <strong>
+  {todayAttendance ? todayAttendance.status : "Not Marked"}
+</strong>
     </div>
 
     <div className="stat-card">
@@ -34,17 +81,25 @@ function WorkerDashboard() {
     <div className="activity-list">
       <div className="activity-item">
         <strong>Today's Assignment</strong>
-        <span>Brick work - Block A</span>
+        <span>
+  {latestDailyWork
+    ? latestDailyWork.description
+    : "No assignment available"}
+</span>
       </div>
 
       <div className="activity-item">
         <strong>Supervisor</strong>
-        <span>Raj Kumar</span>
+        <span>
+  {assignedProject ? assignedProject.supervisor : "No Supervisor"}
+</span>
       </div>
 
       <div className="activity-item">
         <strong>Work Location</strong>
-        <span>ABC Building Site</span>
+        <span>
+  {assignedProject ? assignedProject.location : "No Location"}
+</span>
       </div>
     </div>
   </div>

@@ -118,6 +118,7 @@ function App() {
   },
 ]);
   const [dailyWorkRecords, setDailyWorkRecords] = useState([]);
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -166,6 +167,12 @@ const handleLogin = (event) => {
     setIsLoading(false);
     setIsLoggedIn(true);
   }, 1000);
+};
+
+const handleLogout = () => {
+  setIsLoggedIn(false);
+  setCurrentPage("dashboard");
+  setSelectedProject(null);
 };
   return (
   <>
@@ -269,10 +276,11 @@ const handleLogin = (event) => {
       </div>
     ) : (
       <div className="app-layout">
-        <Sidebar
+   <Sidebar
   role={selectedRole}
   currentPage={currentPage}
   onPageChange={setCurrentPage}
+  onLogout={handleLogout}
 />
 
         <div className="main-section">
@@ -289,13 +297,21 @@ const handleLogin = (event) => {
 )}
 
    {selectedRole === "Supervisor" && (
-  <SupervisorDashboard
+ <SupervisorDashboard
+  projects={projects}
+  employees={employees}
+  dailyWorkRecords={dailyWorkRecords}
+  attendanceRecords={attendanceRecords}
+/>
+)}
+      {selectedRole === "Worker" && (
+  <WorkerDashboard
     projects={projects}
     employees={employees}
+    attendanceRecords={attendanceRecords}
     dailyWorkRecords={dailyWorkRecords}
   />
 )}
-      {selectedRole === "Worker" && <WorkerDashboard />}
     </>
   )}
 
@@ -318,6 +334,8 @@ const handleLogin = (event) => {
      employees={employees}
      dailyWorkRecords={dailyWorkRecords}
      onDailyWorkRecordsChange={setDailyWorkRecords}
+     attendanceRecords={attendanceRecords}
+     onAttendanceRecordsChange={setAttendanceRecords}
     
     onBack={() => {
       setSelectedProject(null);
