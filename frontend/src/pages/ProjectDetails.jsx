@@ -1,12 +1,15 @@
 import { useState } from "react";
 
-function ProjectDetails({project,employees,onBack,onProjectUpdate,attendanceRecords, onAttendanceRecordsChange,dailyWorkRecords,onDailyWorkRecordsChange,}) {
+function ProjectDetails({project,employees,onBack,onProjectUpdate,attendanceRecords,
+   onAttendanceRecordsChange,dailyWorkRecords,onDailyWorkRecordsChange,
+  workerPayments,
+onWorkerPaymentsChange,}) {
   const [showWorkers, setShowWorkers] = useState(false);
   const [showAttendance, setShowAttendance] = useState(false);
   const [showDailyWork, setShowDailyWork] = useState(false);
   const [showPayments, setShowPayments] = useState(false);
   const [showClientPayments, setShowClientPayments] = useState(false);
-  const [workerPayments, setWorkerPayments] = useState([]);
+  
   // Client Payments
 const [clientPayments, setClientPayments] = useState([]);
 const [showClientPaymentForm, setShowClientPaymentForm] = useState(false);
@@ -136,11 +139,11 @@ const handleSavePayment = () => {
   const paymentData = { employeeId: Number(paymentForm.employeeId), date: paymentForm.date, amount: Number(paymentForm.amount), note: paymentForm.note.trim() };
 
   if (editingPaymentId !== null) {
-    setWorkerPayments((previousPayments) => previousPayments.map((payment) =>
+    onWorkerPaymentsChange((previousPayments) => previousPayments.map((payment) =>
       payment.id === editingPaymentId ? { ...payment, ...paymentData } : payment
     ));
   } else {
-    setWorkerPayments((previousPayments) => [...previousPayments, { id: Date.now(), ...paymentData }]);
+    onWorkerPaymentsChange((previousPayments) => [...previousPayments, { id: Date.now(), ...paymentData }]);
   }
   resetPaymentForm();
   setShowPaymentForm(false);
@@ -285,7 +288,7 @@ const handleEditPayment = (payment) => {
 
 const handleDeletePayment = (paymentId) => {
   if (!window.confirm("Are you sure you want to delete this payment?")) return;
-  setWorkerPayments((previousPayments) => previousPayments.filter((payment) => payment.id !== paymentId));
+  onWorkerPaymentsChange((previousPayments) => previousPayments.filter((payment) => payment.id !== paymentId));
 };
 
 const handleEditMaterial = (material) => {

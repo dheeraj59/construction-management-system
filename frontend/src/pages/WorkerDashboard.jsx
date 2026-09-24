@@ -3,6 +3,7 @@ function WorkerDashboard({
   employees,
   attendanceRecords,
   dailyWorkRecords,
+  workerPayments,
 }) {
   const workerName = "Kamal";
 
@@ -34,6 +35,31 @@ const monthlyPresentDays = worker
         record.status === "Present"
     ).length
   : 0;
+
+  const monthlyEarned = worker
+  ? monthlyPresentDays * worker.dailyWage
+  : 0;
+
+const monthlyPaid = worker
+  ? workerPayments
+      .filter(
+        (payment) =>
+          payment.employeeId === worker.id &&
+          payment.date.startsWith(currentMonth)
+      )
+      .reduce((total, payment) => total + payment.amount, 0)
+  : 0;
+
+const paymentStatus =
+  !worker
+    ? "No Worker"
+    : monthlyEarned === 0
+    ? "No Attendance"
+    : monthlyPaid >= monthlyEarned
+    ? "Paid"
+    : monthlyPaid > 0
+    ? "Partial"
+    : "Pending";
 
 const workerDailyWorkRecords = assignedProject
   ? dailyWorkRecords.filter(
@@ -71,7 +97,7 @@ const latestDailyWork = workerDailyWorkRecords[0];
 
     <div className="stat-card">
       <span>Payment Status</span>
-      <strong>Paid</strong>
+      <strong>{paymentStatus}</strong>
     </div>
   </div>
 

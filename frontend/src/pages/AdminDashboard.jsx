@@ -1,4 +1,5 @@
-function AdminDashboard({ projects, employees }) {
+function AdminDashboard({
+  projects,employees,attendanceRecords,}) {
 
     const activeProjects = projects.filter(
     (project) => project.status === "In Progress"
@@ -15,6 +16,27 @@ function AdminDashboard({ projects, employees }) {
   const activeEmployees = employees.filter(
     (employee) => employee.status === "Active"
   ).length;
+  const today = new Date().toISOString().split("T")[0];
+
+const presentToday = employees.filter((employee) =>
+  attendanceRecords.some(
+    (record) =>
+      record.employeeId === employee.id &&
+      record.date === today &&
+      record.status === "Present"
+  )
+).length;
+const totalExpenses = projects.reduce(
+  (total, project) => total + project.totalExpenses,
+  0
+);
+const pendingPayments = projects.reduce(
+  (total, project) =>
+    total + Math.max(project.contractValue - project.amountReceived, 0),
+  0
+);
+
+
 
   const overallProgress =
     projects.length > 0
@@ -49,17 +71,17 @@ function AdminDashboard({ projects, employees }) {
 
     <div className="stat-card">
       <span>Present Today</span>
-      <strong>142</strong>
+      <strong>{presentToday}</strong>
     </div>
 
     <div className="stat-card">
       <span>Total Expenses</span>
-      <strong>₹42.5L</strong>
+      <strong>₹{totalExpenses.toLocaleString("en-IN")}</strong>
     </div>
 
     <div className="stat-card">
       <span>Pending Payments</span>
-      <strong>₹18L</strong>
+      <strong>₹{pendingPayments.toLocaleString("en-IN")}</strong>
     </div>
 
     <div className="stat-card">
