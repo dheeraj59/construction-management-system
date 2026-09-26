@@ -379,7 +379,15 @@ const handleLogout = () => {
 />
 )}
 
-  {currentPage === "attendance" && <Attendance />}
+  {currentPage === "attendance" && (
+  <Attendance
+    role={selectedRole}
+    projects={projects}
+    employees={employees}
+    attendanceRecords={attendanceRecords}
+    onAttendanceRecordsChange={setAttendanceRecords}
+  />
+)}
   {currentPage === "reports" && (selectedRole === "Admin" || selectedRole === "Supervisor") && (
   <Reports
     projects={projects}

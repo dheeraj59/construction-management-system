@@ -2063,3 +2063,26 @@ body {
   background: #f33e02;
 }
 
+/* Attendance Status */
+.attendance-status {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.attendance-status.present {
+  color: #15803d;
+  background-color: #dcfce7;
+}
+
+.attendance-status.absent {
+  color: #dc2626;
+  background-color: #fee2e2;
+}
+
+.attendance-status.not-marked {
+  color: #64748b;
+  background-color: #f1f5f9;
+}
